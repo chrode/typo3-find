@@ -37,6 +37,7 @@
  * @namespace
  */
 namespace Solarium\QueryType\Select\Query\Component;
+
 use Solarium\QueryType\Select\Query\Query as SelectQuery;
 use Solarium\QueryType\Select\RequestBuilder\Component\Grouping as RequestBuilder;
 use Solarium\QueryType\Select\ResponseParser\Component\Grouping as ResponseParser;
@@ -52,7 +53,6 @@ use Solarium\QueryType\Select\ResponseParser\Component\Grouping as ResponseParse
  */
 class Grouping extends Component
 {
-
     /**
      * Value for format grouped
      */
@@ -69,6 +69,16 @@ class Grouping extends Component
      * @var string
      */
     protected $type = SelectQuery::COMPONENT_GROUPING;
+
+    /**
+     * Default options
+     *
+     * @var array
+     */
+    protected $options = array(
+        'resultquerygroupclass' => 'Solarium\QueryType\Select\Result\Grouping\QueryGroup',
+        'resultvaluegroupclass' => 'Solarium\QueryType\Select\Result\Grouping\ValueGroup',
+    );
 
     /**
      * Fields for grouping
@@ -467,11 +477,12 @@ class Grouping extends Component
     /**
      * Set facet option
      *
-     * Group based on the unique values of a function query.
+     * Whether to compute grouped facets.
+     * Grouped facets are computed based on the first specified group.
      * This parameter only is supported on Solr 4.0+
      *
-     * @param  string $value
-     * @return self   Provides fluent interface
+     * @param  boolean $value
+     * @return self    Provides fluent interface
      */
     public function setFacet($value)
     {
@@ -481,7 +492,7 @@ class Grouping extends Component
     /**
      * Get facet option
      *
-     * @return string|null
+     * @return boolean|null
      */
     public function getFacet()
     {
@@ -512,4 +523,49 @@ class Grouping extends Component
         return $this->getOption('format');
     }
 
+    /**
+     * Set the query group result class
+     *
+     * @param  string $value classname
+     * @return self   Provides fluent interface
+     */
+    public function setResultQueryGroupClass($value)
+    {
+        return $this->setOption('resultquerygroupclass', $value);
+    }
+
+    /**
+     * Get the current resultquerygroupclass option
+     *
+     * The value is a classname, not an instance
+     *
+     * @return string
+     */
+    public function getResultQueryGroupClass()
+    {
+        return $this->getOption('resultquerygroupclass');
+    }
+
+    /**
+     * Set the value group result class
+     *
+     * @param  string $value classname
+     * @return self   Provides fluent interface
+     */
+    public function setResultValueGroupClass($value)
+    {
+        return $this->setOption('resultvaluegroupclass', $value);
+    }
+
+    /**
+     * Get the current resultvaluegroupclass option
+     *
+     * The value is a classname, not an instance
+     *
+     * @return string
+     */
+    public function getResultValueGroupClass()
+    {
+        return $this->getOption('resultvaluegroupclass');
+    }
 }

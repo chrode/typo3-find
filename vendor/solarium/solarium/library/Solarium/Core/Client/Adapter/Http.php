@@ -37,6 +37,7 @@
  * @namespace
  */
 namespace Solarium\Core\Client\Adapter;
+
 use Solarium\Core\Configurable;
 use Solarium\Core\Client\Request;
 use Solarium\Core\Client\Response;
@@ -48,7 +49,6 @@ use Solarium\Exception\HttpException;
  */
 class Http extends Configurable implements AdapterInterface
 {
-
     /**
      * Handle Solr communication
      *
@@ -129,10 +129,14 @@ class Http extends Configurable implements AdapterInterface
 
         // Try endpoint authentication first, fallback to request for backwards compatibility
         $authData = $endpoint->getAuthentication();
-        if(empty($authData['username'])) $authData = $request->getAuthentication();
+        if (empty($authData['username'])) {
+            $authData = $request->getAuthentication();
+        }
 
-        if ( !empty($authData['username']) && !empty($authData['password'])) {
-            $request->addHeader('Authorization: Basic ' . base64_encode($authData['username']. ':' . $authData['password'] ));
+        if (!empty($authData['username']) && !empty($authData['password'])) {
+            $request->addHeader(
+                'Authorization: Basic ' . base64_encode($authData['username'] . ':' . $authData['password'])
+            );
         }
 
         $headers = $request->getHeaders();
@@ -157,6 +161,7 @@ class Http extends Configurable implements AdapterInterface
      */
     protected function getData($uri, $context)
     {
+
         // @codeCoverageIgnoreStart
         $data = @file_get_contents($uri, false, $context);
 
@@ -169,5 +174,4 @@ class Http extends Configurable implements AdapterInterface
         return array($data, $headers);
         // @codeCoverageIgnoreEnd
     }
-
 }

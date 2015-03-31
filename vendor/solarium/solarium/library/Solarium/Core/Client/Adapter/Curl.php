@@ -37,6 +37,7 @@
  * @namespace
  */
 namespace Solarium\Core\Client\Adapter;
+
 use Solarium\Core\Configurable;
 use Solarium\Core\Client\Request;
 use Solarium\Core\Client\Response;
@@ -52,7 +53,6 @@ use Solarium\Exception\HttpException;
  */
 class Curl extends Configurable implements AdapterInterface
 {
-
     /**
      * Initialization hook
      *
@@ -64,9 +64,9 @@ class Curl extends Configurable implements AdapterInterface
     {
         // @codeCoverageIgnoreStart
         if (!function_exists('curl_init')) {
-           throw new RuntimeException('cURL is not available, install it to use the CurlHttp adapter');
+            throw new RuntimeException('cURL is not available, install it to use the CurlHttp adapter');
         }
-
+        
         parent::init();
         // @codeCoverageIgnoreEnd
     }
@@ -110,7 +110,7 @@ class Curl extends Configurable implements AdapterInterface
     public function getResponse($handle, $httpResponse)
     {
         // @codeCoverageIgnoreStart
-        if ($httpResponse !== false) {
+        if ($httpResponse !== false && $httpResponse !== null) {
             $data = $httpResponse;
             $info = curl_getinfo($handle);
             $headers = array();
@@ -137,33 +137,39 @@ class Curl extends Configurable implements AdapterInterface
      */
     public function createHandle($request, $endpoint)
     {
+
         // @codeCoverageIgnoreStart
         $uri = $endpoint->getBaseUri() . $request->getUri();
         $method = $request->getMethod();
         $options = $this->createOptions($request, $endpoint);
 
         $handler = curl_init();
+
         curl_setopt($handler, CURLOPT_URL, $uri);
         curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
-        if(!ini_get('safe_mode') && !trim(ini_get('open_basedir'))) {
+        if (!ini_get('open_basedir')) {
             curl_setopt($handler, CURLOPT_FOLLOWLOCATION, true);
         }
         curl_setopt($handler, CURLOPT_TIMEOUT, $options['timeout']);
+        curl_setopt($handler, CURLOPT_CONNECTTIMEOUT, $options['timeout']);
 
-        if ( $proxy = $this->getOption('proxy') ) {
-           curl_setopt($handler, CURLOPT_PROXY, $proxy);
+        if ($proxy = $this->getOption('proxy')) {
+            curl_setopt($handler, CURLOPT_PROXY, $proxy);
         }
 
         if (!isset($options['headers']['Content-Type'])) {
             $options['headers']['Content-Type'] = 'text/xml; charset=utf-8';
         }
 
+
         // Try endpoint authentication first, fallback to request for backwards compatibility
         $authData = $endpoint->getAuthentication();
-        if(empty($authData['username'])) $authData = $request->getAuthentication();
+        if (empty($authData['username'])) {
+            $authData = $request->getAuthentication();
+        }
 
-        if ( !empty($authData['username']) && !empty($authData['password'])) {
-            curl_setopt($handler, CURLOPT_USERPWD, $authData['username']. ':' . $authData['password'] );
+        if (!empty($authData['username']) && !empty($authData['password'])) {
+            curl_setopt($handler, CURLOPT_USERPWD, $authData['username']. ':' . $authData['password']);
             curl_setopt($handler, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         }
 
@@ -177,9 +183,18 @@ class Curl extends Configurable implements AdapterInterface
 
         if ($method == Request::METHOD_POST) {
             curl_setopt($handler, CURLOPT_POST, true);
+
             if ($request->getFileUpload()) {
-                curl_setopt($handler, CURLOPT_POSTFIELDS, array('content' => '@'.$request->getFileUpload()));
+                if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
+                    $curlFile = curl_file_create($request->getFileUpload());
+                    curl_setopt($handler, CURLOPT_POSTFIELDS, array('content' => $curlFile));
+                } else {
+                    curl_setopt($handler, CURLOPT_POSTFIELDS, array('content' => '@'.$request->getFileUpload()));
+                }
             } else {
+
+
+
                 curl_setopt($handler, CURLOPT_POSTFIELDS, $request->getRawData());
             }
         } elseif ($method == Request::METHOD_GET) {
@@ -224,7 +239,7 @@ class Curl extends Configurable implements AdapterInterface
      * @throws HttpException
      * @param  string        $data
      * @param  array         $headers
-     * @param  Curl handle   $handle
+     * @param  resource      $handle
      * @return void
      */
     public function check($data, $headers, $handle)

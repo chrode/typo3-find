@@ -43,7 +43,6 @@ namespace Solarium\QueryType\Select\Result;
  */
 abstract class AbstractDocument implements \IteratorAggregate, \Countable, \ArrayAccess
 {
-
     /**
      * All fields in this document
      *
@@ -77,6 +76,20 @@ abstract class AbstractDocument implements \IteratorAggregate, \Countable, \Arra
         }
 
         return $this->fields[$name];
+    }
+
+    /**
+     * Check if field is set by name
+     *
+     * Magic method for checking if fields are set as properties of this document
+     * object, by field name. Also used by empty().
+     *
+     * @param  string $name
+     * @return boolean
+     */
+    public function __isset($name)
+    {
+        return isset($this->fields[$name]);
     }
 
     /**
@@ -143,5 +156,4 @@ abstract class AbstractDocument implements \IteratorAggregate, \Countable, \Arra
     {
         return $this->__get($offset);
     }
-
 }
